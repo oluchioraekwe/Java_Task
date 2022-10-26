@@ -21,7 +21,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserDetailsService userDetailsService;
@@ -54,14 +54,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
        http.csrf().disable();
        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
        http.authorizeRequests().antMatchers(HttpMethod.POST,"/register/**").permitAll();
-       http.authorizeRequests().antMatchers(HttpMethod.GET,"/facebook/**").hasAnyAuthority("ADMIN");
-        http.authorizeRequests().antMatchers(HttpMethod.POST,"/facebook/**").hasAnyAuthority("ADMIN");
-        http.authorizeRequests().antMatchers(HttpMethod.PUT,"/facebook/**").hasAnyAuthority("ADMIN");
-        http.authorizeRequests().antMatchers("/story/**").hasAnyAuthority("ADMIN","USER");
+       http.authorizeRequests().antMatchers("/facebook/**").hasAnyRole("ADMIN","USER");
+        http.authorizeRequests().antMatchers("/story/**").hasAnyRole("ADMIN","USER");
        http.authorizeRequests().anyRequest().authenticated();
         http.logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout"));
        http.addFilter(new CustomAuthenticationFilter(authenticationManagerBean()));
-//        http.addFilter(authenticationManagerBean());
        http.addFilterBefore(new CustomAuthorisationFilter(), UsernamePasswordAuthenticationFilter.class);
 
     }

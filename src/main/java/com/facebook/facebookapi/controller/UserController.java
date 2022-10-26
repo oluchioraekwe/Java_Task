@@ -3,7 +3,6 @@ package com.facebook.facebookapi.controller;
 import com.facebook.facebookapi.entity.Role;
 import com.facebook.facebookapi.entity.User;
 import com.facebook.facebookapi.filter.CustomAuthenticationFilter;
-import com.facebook.facebookapi.service.UserService;
 import com.facebook.facebookapi.service.UserServiceImpl;
 import com.facebook.facebookapi.validate.ValidatePassword;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-//@RequestMapping(path = "/facebook")
 public class UserController {
+
     @Autowired
     private UserServiceImpl userService;
 
@@ -36,13 +35,13 @@ public class UserController {
 
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/facebook/users")
     public ResponseEntity<?> getUsers(){
         Map<String,Object> response = new HashMap<>();
         List<User> users = userService.getAllUsers();
         response.put("status",200);
         response.put("users", users);
-
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
@@ -71,17 +70,22 @@ public class UserController {
         User createdUser = userService.saveUser(user);
         response.put("status",201);
         response.put("userId",createdUser.getId());
-        String message = "User with name"+ createdUser.getFirstName() +"created successfully";
+        String message = "User with name "+ createdUser.getFirstName() +" created successfully";
         response.put("message",message);
         return new ResponseEntity<>(response,HttpStatus.CREATED);
 
     }
 
     @PostMapping("/facebook/role")
-    public  ResponseEntity<Role> createRole(@RequestBody Role role){
-        return new ResponseEntity<Role>(userService.saveRole(role),HttpStatus.CREATED);
+    public  ResponseEntity<?> createRole(@RequestBody Role role){
+        try {
+            return new ResponseEntity<Role>(userService.saveRole(role), HttpStatus.CREATED);
+        }catch (Exception exception){
+            return new ResponseEntity<>(exception.getMessage(),HttpStatus.BAD_REQUEST);
+        }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/facebook/user/{id}")
     public ResponseEntity<User> getUser(@PathVariable("id") Long id){
         return new ResponseEntity<>(userService.getUser(id),HttpStatus.OK);
@@ -102,15 +106,23 @@ public class UserController {
                 .collect(Collectors.toList());
         User savedUser = null;
         User updatedUser = null;
+        if(user.getPassword() != null){
+            boolean checkPassword = ValidatePassword.isValid(user.getPassword());
+            if(!checkPassword){
+                String message = "Invalid Password";
+                response.put("error_message",message);
+                return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+            }
+        }
         try{
             savedUser = userService.getUser(id);
         }catch (Exception exception){
             System.out.println(exception);
         }
-        if(roles.contains("ADMIN") || savedUser.getEmail().equals(username)){
+        if(roles.contains("ROLE_ADMIN") || savedUser.getEmail().equals(username)){
             updatedUser = userService.updateUser(user,id);
             response.put("status",200);
-            response.put("message","User with name"+ updatedUser.getFirstName() +"updated successfully");
+            response.put("message","User with name "+ updatedUser.getFirstName() +" updated successfully");
             return  new ResponseEntity<>(response,HttpStatus.OK);
         }else {
             response.put("status",200);
@@ -148,6 +160,8 @@ public class UserController {
         }
 
     }
+//    @PostMapping("/role/create")
+//    public ResponseEntity
 
     @PostMapping("/facebook/signout")
     public ResponseEntity<?> logoutUser(){

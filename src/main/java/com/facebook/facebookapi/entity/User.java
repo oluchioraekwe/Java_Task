@@ -36,7 +36,7 @@ public class User {
     private Gender gender;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "roles")
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private Collection<Role> roles = new ArrayList<>();
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

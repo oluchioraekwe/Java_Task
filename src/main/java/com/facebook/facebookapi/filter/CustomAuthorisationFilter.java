@@ -30,7 +30,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 public class CustomAuthorisationFilter extends OncePerRequestFilter {
 
-
+    @Value("${jwt.secret}")
+    private String secret2;
 
 
     private String secret =  "jwt.key.secret";

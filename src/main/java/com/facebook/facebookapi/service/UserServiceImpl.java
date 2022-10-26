@@ -60,8 +60,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = userRepository.findByEmail(email);
         if(user == null){
             throw new UsernameNotFoundException("User not found in database");
-        }else {
-            System.out.println("User found");
         }
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         user.getRoles().forEach(role -> {
@@ -77,6 +75,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public Role saveRole(Role role) {
+        Role savedRole = roleRepository.findByName(role.getName());
+        if(savedRole != null){
+            throw new RuntimeException("Role exist in database");
+        }
         return roleRepository.save(role);
     }
 
@@ -120,7 +122,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         savedUser.setFirstName(firstName);
         savedUser.setLastName(lastName);
-        savedUser.setPassword(password);
+        savedUser.setPassword(bCryptPasswordEncoder.encode(password));
         savedUser.setEmail(savedEmail);
         savedUser.setCountry(country);
         savedUser.setDob(dob);

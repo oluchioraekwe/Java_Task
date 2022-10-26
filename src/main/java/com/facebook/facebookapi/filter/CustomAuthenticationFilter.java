@@ -5,8 +5,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +13,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -29,13 +26,15 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@Component
+//@Component
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-   // @Value("${jwt.secret}")
-  //  private String secret;
-//    private String secret =  environment.getProperty("jwt.key.secret");
+   @Value("${jwt.secret}")
+   private String secret2;
     private String secret =  "jwt.key.secret";
+
+
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -45,13 +44,9 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         super.setAuthenticationManager(authenticationManager);
     }
 
-    /**
-     *
-     * @param authenticationManager
-     */
-
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager){
         this.authenticationManager = authenticationManager;
+
 
     }
     @Override
@@ -59,12 +54,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         String username = request.getParameter("email");
         String password = request.getParameter("password");
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(username,password);
-
+        
         return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
+
         User user = (User) authentication.getPrincipal();
         Algorithm algorithm = Algorithm.HMAC256(this.secret.getBytes());
         String access_token = JWT.create()
